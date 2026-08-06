@@ -1,0 +1,7 @@
+# Nunca versionar la configuración de producción:
+# lleva la URL del flujo, que funciona sin autenticación.
+config.produccion.js
+
+# Fichas y documentación de causas
+*.docx
+*.pdf
