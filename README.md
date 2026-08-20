@@ -104,9 +104,12 @@ no existe.
 
 ## Publicarlo en una URL
 
-Con el repositorio público se puede servir gratis desde GitHub Pages, para abrirlo sin
-descargarlo: *Settings → Pages → Source: Deploy from a branch → main / (root)*. Queda en
-`https://<usuario>.github.io/<repositorio>/formulario_ficha.html`.
+Con el repositorio público se sirve gratis desde GitHub Pages, para abrirlo sin descargarlo:
+*Settings → Pages → Source: Deploy from a branch → main / (root)*.
+
+El `index.html` de la raíz existe solo para eso: redirige a `formulario_ficha.html`, así la
+dirección corta del sitio abre el formulario. **Sin ese archivo, GitHub Pages convierte este
+README en la página de inicio y el formulario no aparece.**
 
 Igual conviene tener el archivo bajado: así funciona aunque no haya internet.
 
