@@ -128,8 +128,9 @@
     <h2><span class="n">01</span> Identificación de la causa</h2>
     <div class="rejilla">
       <div class="campo"><label class="et" for="cuij">CUIJ EJE</label><input type="text" id="cuij" placeholder="J-01-00161743-1/2026-0"></div>
-      <div class="campo"><label class="et" for="caratula">Carátula</label><input type="text" id="caratula"></div>
-      <div class="campo full"><label class="et" for="ddh">Objeto de autos (DDH)</label><textarea id="ddh" style="min-height:56px"></textarea></div>
+      <div class="campo"><label class="et" for="mpf">MPF</label><input type="text" id="mpf"></div>
+      <div class="campo"><label class="et" for="vencimiento">Vencimiento de la IPP</label><input type="text" id="vencimiento" placeholder="dd/mm/aaaa"></div>
+      <div class="campo full"><label class="et" for="caratula">Carátula</label><input type="text" id="caratula"></div>
     </div>
   </section>
 
@@ -149,17 +150,14 @@
       <button class="sec" data-agregar="denunciados">Agregar denunciado</button>
       <button class="sec" data-pegar="denunciados">Pegar listado</button>
     </div>
-    <p class="pie">Para muchas partes conviene «Pegar listado»: una por línea, con los datos separados por tabulaciones — como salen de una planilla.</p>
+    <p class="pie">Cada denunciado lleva su propia defensa dentro del mismo bloque. Para muchas partes conviene «Pegar listado»: una por línea, con los datos separados por tabulaciones — como salen de una planilla.</p>
   </section>
 
   <section class="paso">
-    <h2><span class="n">04</span> Defensa y otros intervinientes</h2>
+    <h2><span class="n">04</span> Asesoría Tutelar</h2>
     <div class="rejilla">
-      <div class="campo"><label class="et" for="defensa">Defensoría / abogado particular</label><input type="text" id="defensa"></div>
-      <div class="campo"><label class="et" for="defensaTel">Teléfono de la defensa</label><input type="text" id="defensaTel"></div>
-      <div class="campo"><label class="et" for="defensaMail">Correo de la defensa</label><input type="email" id="defensaMail"></div>
-      <div class="campo"><label class="et" for="asesoria">Asesoría Tutelar</label><input type="text" id="asesoria" placeholder="solo si hay menores"></div>
-      <div class="campo"><label class="et" for="asesoriaTel">Teléfono Asesoría Tutelar</label><input type="text" id="asesoriaTel"></div>
+      <div class="campo"><label class="et" for="asesoria">Asesoría Tutelar de la causa</label><input type="text" id="asesoria" placeholder="solo si hay menores"></div>
+      <div class="campo"><label class="et" for="asesoriaTel">Teléfono de contacto</label><input type="text" id="asesoriaTel"></div>
     </div>
   </section>
 
@@ -167,10 +165,9 @@
     <h2><span class="n">05</span> Contacto de fiscalía</h2>
     <div class="rejilla">
       <div class="campo"><label class="et" for="fiscalia">Fiscalía interviniente</label><input type="text" id="fiscalia"></div>
-      <div class="campo"><label class="et" for="fiscaliaResp">Responsable de la causa</label><input type="text" id="fiscaliaResp"></div>
-      <div class="campo"><label class="et" for="fiscaliaTel">Teléfono</label><input type="text" id="fiscaliaTel"></div>
+      <div class="campo"><label class="et" for="sumariante">Sumariante</label><input type="text" id="sumariante"></div>
+      <div class="campo"><label class="et" for="fiscaliaTel">Teléfono de contacto</label><input type="text" id="fiscaliaTel"></div>
       <div class="campo"><label class="et" for="fiscaliaMail">Correo electrónico</label><input type="email" id="fiscaliaMail"></div>
-      <div class="campo"><label class="et" for="plazo">Plazo para gestionar</label><input type="text" id="plazo"></div>
       <div class="campo"><label class="et" for="modalidad">Modalidad requerida</label>
         <select id="modalidad"><option value="">— elegir —</option><option>VIRTUAL</option><option>PRESENCIAL</option></select>
       </div>

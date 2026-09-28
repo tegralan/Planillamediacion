@@ -27,19 +27,32 @@
 
   var estado = { denunciantes: [], denunciados: [], art92: null, art92ok: false };
 
-  var CAMPOS = [
+  // Campos comunes a toda parte. Un solo telefono: el de la parte, no el del abogado.
+  var CAMPOS_BASE = [
     { k:"nombre",  et:"Nombre y apellido", ancho:true },
     { k:"doc",     et:"DNI / Pasaporte" },
-    { k:"fijo",    et:"Teléfono fijo" },
-    { k:"celular", et:"Celular" },
+    { k:"telefono", et:"Teléfono de contacto" },
     { k:"mail",    et:"Correo electrónico" },
     { k:"conformidad", et:"Conformidad", ops:["", "Sí", "No", "Pendiente", "Sin contacto"] }
   ];
 
+  // Cada denunciado lleva su propia defensa: son distintas entre si.
+  var CAMPOS_DEFENSA = [
+    { k:"defensa",     et:"Defensoría / abogado particular", ancho:true },
+    { k:"defensaTel",  et:"Teléfono de contacto" },
+    { k:"defensaMail", et:"Correo electrónico" }
+  ];
+
+  function camposDe(tipo) {
+    return tipo === "denunciados" ? CAMPOS_BASE.concat(CAMPOS_DEFENSA) : CAMPOS_BASE;
+  }
+
   var ETIQUETA = { denunciantes: "Denunciante", denunciados: "Denunciado" };
 
-  function nuevaParte() {
-    return { nombre:"", doc:"", fijo:"", celular:"", mail:"", conformidad:"" };
+  function nuevaParte(tipo) {
+    var p = { nombre:"", doc:"", telefono:"", mail:"", conformidad:"" };
+    if (tipo === "denunciados") { p.defensa = ""; p.defensaTel = ""; p.defensaMail = ""; }
+    return p;
   }
 
   function pintarPartes(tipo) {
@@ -56,7 +69,7 @@
     cont.innerHTML = lista.map(function (p, i) {
       return '<div class="parte"><header><h3>' + ETIQUETA[tipo] + " " + (i + 1) + "</h3>" +
         '<button class="sec mini" data-quitar="' + tipo + '" data-i="' + i + '">Quitar</button></header>' +
-        '<div class="cuerpo">' + CAMPOS.map(function (c) {
+        '<div class="cuerpo">' + camposDe(tipo).map(function (c) {
           var id = tipo + "-" + i + "-" + c.k;
           var control = c.ops
             ? '<select id="' + id + '" data-t="' + tipo + '" data-i="' + i + '" data-k="' + c.k + '">' +
@@ -93,7 +106,7 @@
     var texto = window.prompt(
       "Pegar una parte por línea.\n" +
       "Campos separados por tabulación o punto y coma, en este orden:\n\n" +
-      "Nombre y apellido · DNI · Teléfono fijo · Celular · Correo\n\n" +
+      "Nombre y apellido · DNI · Teléfono de contacto · Correo\n\n" +
       "Alcanza con el nombre; el resto puede quedar vacío.");
     if (!texto) return;
 
@@ -101,10 +114,10 @@
     texto.split(/\r?\n/).forEach(function (linea) {
       if (!linea.trim()) return;
       var c = linea.split(/\t|;/).map(function (x) { return x.trim(); });
-      estado[tipo].push({
-        nombre: c[0] || "", doc: c[1] || "", fijo: c[2] || "",
-        celular: c[3] || "", mail: c[4] || "", conformidad: ""
-      });
+      var p = nuevaParte(tipo);
+      p.nombre = c[0] || ""; p.doc = c[1] || "";
+      p.telefono = c[2] || ""; p.mail = c[3] || "";
+      estado[tipo].push(p);
       agregadas++;
     });
 
@@ -170,29 +183,32 @@
 
   function recolectar() {
     var d = {
-      cuij: leer("cuij"), caratula: leer("caratula"), ddh: leer("ddh"),
+      cuij: leer("cuij"), mpf: leer("mpf"), caratula: leer("caratula"),
+      vencimiento: leer("vencimiento"),
       denunciantes: estado.denunciantes, denunciados: estado.denunciados,
-      defensa: leer("defensa"), defensaTel: leer("defensaTel"), defensaMail: leer("defensaMail"),
       asesoria: leer("asesoria"), asesoriaTel: leer("asesoriaTel"),
-      fiscalia: leer("fiscalia"), fiscaliaResp: leer("fiscaliaResp"),
+      fiscalia: leer("fiscalia"), sumariante: leer("sumariante"),
       fiscaliaTel: leer("fiscaliaTel"), fiscaliaMail: leer("fiscaliaMail"),
-      plazo: leer("plazo"), modalidad: leer("modalidad")
+      modalidad: leer("modalidad")
     };
 
     var faltan = [];
     if (!d.cuij) faltan.push("CUIJ EJE");
     if (!d.caratula) faltan.push("carátula");
-    if (!d.ddh) faltan.push("objeto de autos (DDH)");
+    if (!d.vencimiento) faltan.push("vencimiento de la IPP");
     if (!d.denunciantes.length) faltan.push("al menos un denunciante");
     if (!d.denunciados.length) faltan.push("al menos un denunciado");
-    if (!d.defensa) faltan.push("defensa del denunciado");
+    if (!d.fiscalia) faltan.push("fiscalía interviniente");
     if (!d.modalidad) faltan.push("modalidad");
 
     var sinTel = d.denunciantes.concat(d.denunciados).filter(function (p) {
-      return !p.fijo && !p.celular;
+      return !p.telefono;
     }).length;
 
-    return { datos: d, faltan: faltan, sinTel: sinTel };
+    // Sin defensa designada no se fija audiencia. Se cuenta por denunciado.
+    var sinDefensa = d.denunciados.filter(function (p) { return !p.defensa; }).length;
+
+    return { datos: d, faltan: faltan, sinTel: sinTel, sinDefensa: sinDefensa };
   }
 
   function avisosPendientes(r, incluirArt92) {
@@ -200,6 +216,11 @@
     if (r.faltan.length) {
       html += '<div class="aviso"><strong>Quedó incompleta</strong>Falta: ' +
         esc(r.faltan.join(" · ")) + ".</div>";
+    }
+    if (r.sinDefensa) {
+      html += '<div class="aviso"><strong>' + r.sinDefensa +
+        " denunciado(s) sin defensa designada</strong>Sin defensa no se fija ni se " +
+        "solicita audiencia. Es un bloqueante, no una observación.</div>";
     }
     if (r.sinTel) {
       html += '<div class="aviso"><strong>' + r.sinTel +
@@ -254,30 +275,35 @@
     h += '<p class="intro"><strong>La ficha con los datos completos de las partes:</strong></p>';
 
     h += "<h2>Identificación de la causa</h2>" + tablaHTML([
-      ["CUIJ EJE", d.cuij], ["Carátula", d.caratula], ["Objeto de autos (DDH)", d.ddh]]);
-    h += '<p class="nota">El objeto de autos (DDH) es imprescindible. Debe consignarse el CUIJ de EJE.</p>';
+      ["CUIJ EJE", d.cuij], ["MPF", d.mpf], ["Carátula", d.caratula],
+      ["Vencimiento de la IPP", d.vencimiento]]);
+    h += '<p class="nota">Debe consignarse el CUIJ de EJE. El objeto de autos (DDH) consta en el ' +
+      "Decreto de Determinación de los Hechos que se remite adjunto.</p>";
 
-    var bloque = function (t, p) {
-      return "<h2>" + esc(t) + "</h2>" + tablaHTML([
+    var bloque = function (t, p, conDefensa) {
+      var filas = [
         ["Nombre y apellido", p.nombre], ["DNI / Pasaporte u otro", p.doc],
-        ["Teléfono fijo", p.fijo], ["Celular", p.celular], ["Correo electrónico", p.mail]]);
+        ["Teléfono de contacto", p.telefono], ["Correo electrónico", p.mail]];
+      if (conDefensa) {
+        filas.push(["Defensoría / abogado particular", p.defensa]);
+        filas.push(["Teléfono de contacto", p.defensaTel]);
+        filas.push(["Correo electrónico", p.defensaMail]);
+      }
+      return "<h2>" + esc(t) + "</h2>" + tablaHTML(filas);
     };
-    d.denunciantes.forEach(function (p, i) { h += bloque("Parte denunciante " + (i + 1), p); });
-    d.denunciados.forEach(function (p, i) { h += bloque("Parte denunciada " + (i + 1), p); });
-    h += '<p class="nota">Los números de teléfono fijo y/o celulares son imprescindibles.</p>';
-
-    h += "<h2>Defensoría interviniente o abogado particular</h2>" + tablaHTML([
-      ["Defensoría / abogado particular", d.defensa],
-      ["Teléfono de contacto", d.defensaTel], ["Correo electrónico", d.defensaMail]]);
+    d.denunciantes.forEach(function (p, i) { h += bloque("Parte denunciante " + (i + 1), p, false); });
+    d.denunciados.forEach(function (p, i) { h += bloque("Parte denunciada " + (i + 1), p, true); });
+    h += '<p class="nota">Los teléfonos de contacto de las partes son imprescindibles. El teléfono ' +
+      "del abogado no reemplaza al de la parte. Sin defensa designada no se fija audiencia.</p>";
 
     h += "<h2>Asesoría Tutelar</h2>" + tablaHTML([
       ["Asesoría Tutelar de la causa", d.asesoria], ["Teléfono de contacto", d.asesoriaTel]]);
     h += '<p class="nota">Se completa si hay personas menores de edad y resulta necesaria su intervención.</p>';
 
     h += "<h2>Contacto de fiscalía</h2>" + tablaHTML([
-      ["Fiscalía interviniente", d.fiscalia], ["Responsable de la causa", d.fiscaliaResp],
-      ["Teléfono", d.fiscaliaTel], ["Correo electrónico", d.fiscaliaMail],
-      ["Plazo para gestionar la mediación", d.plazo], ["Modalidad requerida", d.modalidad]]);
+      ["Fiscalía interviniente", d.fiscalia], ["Sumariante", d.sumariante],
+      ["Teléfono de contacto", d.fiscaliaTel], ["Correo electrónico", d.fiscaliaMail],
+      ["Modalidad requerida", d.modalidad]]);
 
     h += "<h2>Conformidad de las partes</h2>";
     h += '<p class="conf">Asimismo, se deberá dejar constancia de la voluntad de las partes para ' +
@@ -394,7 +420,7 @@
 
   Array.prototype.forEach.call(document.querySelectorAll("[data-agregar]"), function (b) {
     b.addEventListener("click", function () {
-      estado[b.dataset.agregar].push(nuevaParte());
+      estado[b.dataset.agregar].push(nuevaParte(b.dataset.agregar));
       pintarPartes(b.dataset.agregar);
     });
   });
@@ -403,8 +429,8 @@
     b.addEventListener("click", function () { pegarListado(b.dataset.pegar); });
   });
 
-  estado.denunciantes.push(nuevaParte());
-  estado.denunciados.push(nuevaParte());
+  estado.denunciantes.push(nuevaParte("denunciantes"));
+  estado.denunciados.push(nuevaParte("denunciados"));
   pintarPartes("denunciantes");
   pintarPartes("denunciados");
 

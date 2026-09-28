@@ -100,37 +100,38 @@ function construirFicha(JSZipRef, datos, membreteBytes) {
   cuerpo += seccion("Identificaci\u00F3n de la causa");
   cuerpo += tabla([
     ["CUIJ EJE", datos.cuij],
+    ["MPF", datos.mpf],
     ["Car\u00E1tula", datos.caratula],
-    ["Objeto de autos (DDH)", datos.ddh]
+    ["Vencimiento de la IPP", datos.vencimiento]
   ]);
-  cuerpo += nota("El objeto de autos (DDH) es imprescindible. Debe consignarse el CUIJ de EJE.");
+  cuerpo += nota("Debe consignarse el CUIJ de EJE. El objeto de autos (DDH) consta en el Decreto " +
+                 "de Determinaci\u00F3n de los Hechos que se remite adjunto.");
 
   // ---- partes ----
-  var bloqueParte = function (titulo, p) {
-    return seccion(titulo) + tabla([
+  // Cada denunciado lleva su propia defensa dentro del mismo bloque.
+  var bloqueParte = function (titulo, p, conDefensa) {
+    var filas = [
       ["Nombre y apellido", p.nombre],
       ["DNI / Pasaporte u otro", p.doc],
-      ["Tel\u00E9fono fijo", p.fijo],
-      ["Celular", p.celular],
+      ["Tel\u00E9fono de contacto", p.telefono],
       ["Correo electr\u00F3nico", p.mail]
-    ]);
+    ];
+    if (conDefensa) {
+      filas.push(["Defensor\u00EDa / abogado particular", p.defensa]);
+      filas.push(["Tel\u00E9fono de contacto", p.defensaTel]);
+      filas.push(["Correo electr\u00F3nico", p.defensaMail]);
+    }
+    return seccion(titulo) + tabla(filas);
   };
 
   datos.denunciantes.forEach(function (p, i) {
-    cuerpo += bloqueParte("Parte denunciante " + (i + 1), p);
+    cuerpo += bloqueParte("Parte denunciante " + (i + 1), p, false);
   });
   datos.denunciados.forEach(function (p, i) {
-    cuerpo += bloqueParte("Parte denunciada " + (i + 1), p);
+    cuerpo += bloqueParte("Parte denunciada " + (i + 1), p, true);
   });
-  cuerpo += nota("Los n\u00FAmeros de tel\u00E9fono fijo y/o celulares son imprescindibles.");
-
-  // ---- defensa ----
-  cuerpo += seccion("Defensor\u00EDa interviniente o abogado particular");
-  cuerpo += tabla([
-    ["Defensor\u00EDa / abogado particular", datos.defensa],
-    ["Tel\u00E9fono de contacto", datos.defensaTel],
-    ["Correo electr\u00F3nico", datos.defensaMail]
-  ]);
+  cuerpo += nota("Los tel\u00E9fonos de contacto de las partes son imprescindibles. El tel\u00E9fono " +
+                 "del abogado no reemplaza al de la parte. Sin defensa designada no se fija audiencia.");
 
   // ---- asesoria ----
   cuerpo += seccion("Asesor\u00EDa Tutelar");
@@ -144,10 +145,9 @@ function construirFicha(JSZipRef, datos, membreteBytes) {
   cuerpo += seccion("Contacto de fiscal\u00EDa");
   cuerpo += tabla([
     ["Fiscal\u00EDa interviniente", datos.fiscalia],
-    ["Responsable de la causa", datos.fiscaliaResp],
-    ["Tel\u00E9fono", datos.fiscaliaTel],
+    ["Sumariante", datos.sumariante],
+    ["Tel\u00E9fono de contacto", datos.fiscaliaTel],
     ["Correo electr\u00F3nico", datos.fiscaliaMail],
-    ["Plazo para gestionar la mediaci\u00F3n", datos.plazo],
     ["Modalidad requerida", datos.modalidad]
   ]);
   cuerpo += nota("Modalidad: virtual o presencial. Se indica al solicitar, para evitar reprogramaciones.");

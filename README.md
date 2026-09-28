@@ -12,7 +12,11 @@ red, con la ficha y el art. 92 adentro.
 ## Qué hace
 
 - **Partes ilimitadas.** Agrega denunciantes y denunciados de a uno, o pega un
-  listado entero cuando son decenas.
+  listado entero cuando son decenas. Cada denunciado lleva su propia defensa
+  dentro del mismo bloque, porque con varias partes las defensorías son
+  distintas entre sí.
+- **Un solo teléfono por parte**, el de contacto. El del abogado no reemplaza al
+  de la parte.
 - **Controla el art. 92.** Abre el PDF, cuenta las carillas y rechaza los de más
   de dos.
 - **Genera la ficha** en Word o en PDF, con el membrete, el texto del protocolo
